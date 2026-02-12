@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGL 2.0 実験室</title>
+    <style>
+		*, *::before, *::after {
+			box-sizing: border-box; /* width が全体の幅を示す */
+		}
+
+		body {
+			display: flex;
+			justify-content: center;
+		}
+
+		div.box {
+			max-width: 576px;
+		}
+
+		div#main {
+			width: fit-content;
+		}
+
+		h1#title { 
+			margin: 8px 0; /* 上下 左右 */
+			font-size: 150%;
+		}
+
+		div#navi {
+			margin: 0 0 8px 0; /* 上 右 下 左 */
+			float: right;
+		}
+
+		div#navi::after {
+			content: "";
+			display: block;
+			clear: both;
+		}
+
+        canvas#my-canvas {
+			display: block; /* 画像の下の隙間を防ぐ */
+			background-color: black;
+			width: 100%;
+			height: 300px;
+		}
+
+		textarea#text-box {
+			width: 100%;
+			height: 96px;
+			margin: 0;
+			font-size: 11pt;
+			line-height: 125%;
+			resize: none; /* サイズグリップを消す */
+			outline: none; /* フォーカス時の強調をキャンセル */
+		}
+
+		div#panel-box>button {
+			margin: 4px 0;
+			height: 24px;
+		}
+    </style>
+</head>
+
+<body>
+<div id="main">
+	<div class="box">
+		<h1 id="title">WebGL 2.0 実験室</h1>
+	</div>
+	<div id="navi" class="box">
+		[<a href="https://github.com/yuimax/webgl"
+			target="manual">code GitHub</a>]
+		[<a href="https://developer.mozilla.org/ja/docs/Web/API/WebGL_API"
+			target="manual">WebGL API</a>]
+		[<a href="https://developer.mozilla.org/ja/docs/Web/API/WebGL_API/Tutorial"
+			target="manual">WebGL Tutorial</a>]
+	</div>
+	<div class="box">
+		<canvas id="my-canvas"></canvas>
+	</div>
+	<div class="box">
+		<textarea id="text-box"></textarea>
+	</div>
+	<div id="panel-box" class="box">
+		<button type="button" id="btn-01">s01</button>
+		<button type="button" id="btn-02">s02</button>
+		<button type="button" id="btn-03">s03</button>
+		<button type="button" id="btn-04">s04</button>
+		<button type="button" id="btn-05">s05</button>
+		<button type="button" id="btn-99">CLEAR</button>
+	</div>
+
+	<!-- 以下スクリプト -->
+
+	<script src="gl-matrix-min.js"></script>
+	<script src="data-urls.js"></script>
+	<script src="mylib.js"></script>
+	<script src="sub/s01.js"></script>
+	<script src="sub/s02.js"></script>
+	<script src="sub/s03.js"></script>
+	<script src="sub/s04.js"></script>
+	<script src="sub/s05.js"></script>
+
+	<script>
+		// 最近の描画記録
+		const lastDraw = {
+			id: null,		// 実行した処理のid
+			width: null,	// 実行時のキャンバスの幅
+		};
+
+		// id で示される処理を実行
+		function doWork(id) {
+			try {
+				const backColor = {r:0.2, g:0.5, b:0.8};
+				clear();
+
+				switch (id) {
+					case 'btn-01':
+						s01_clearCanvas(backColor);
+						println('s01:背景塗りつぶし');
+						break;
+					case 'btn-02':
+						s02_drawShape(backColor);
+						println('s02:平面図形の表示');
+						break;
+					case 'btn-03':
+						s03_drawColorShape(backColor);
+						println('s03:平面図形のカラー表示');
+						println('プリミティブは TRIANGLE_STRIP');
+						println('座標と色を別々のバッファに格納');
+						break;
+					case 'btn-04':
+						s04_drawColorShape2(backColor);
+						println('s04:平面図形のカラー表示2');
+						println('プリミティブは TRIANGLE_FAN');
+						println('座標と色を1つのバッファに格納（interleave）');
+						break;
+					case 'btn-05':
+						s05_drawTexture(backColor);
+						println('s05:テクスチャの表示');
+						break;
+					case 'btn-99':
+						s01_clearCanvas({ r:0, g:0, b:0 });
+						break;
+				}
+				// idを記録する
+				lastDraw.id = id;
+			}
+			catch (e) {
+				println(e);
+				myDisposeAllProgram();
+				lastDraw.id = null;
+			}
+		}
+
+		// ボタンのclickイベント処理
+		// 親要素 panelBox で一括処理する（イベントの委譲）
+		panelBox.addEventListener('click', function(event) {
+			// event.target は、buttonの子要素（span等）になる場合がある
+			// closest('button') で親要素をさかのぼりbutton が出てくるまで探す
+			const btn = event.target.closest('button');
+
+			// 見つかったボタンが panelBox 内にあれば、対応する処理をおこなう
+			if (btn && panelBox.contains(btn)) {
+				doWork(btn.id);
+			}
+		});
+
+		// ウィンドウのリサイズ処理
+		let myResizeTimer = null;
+		window.addEventListener('resize', function() {
+			// キャンバスがリサイズされた場合のみ
+			if (lastDraw.width !== myCanvas.clientWidth) {
+				// 登録されたタイマー処理があればキャンセル
+				clearTimeout(myResizeTimer);
+
+				// 50ミリ秒後にタイマー処理を登録
+				myResizeTimer = setTimeout(function() {
+					// 最近実行したコマンドを再び実行する
+					doWork(lastDraw.id);
+					lastDraw.width = myCanvas.clientWidth;
+				}, 50);
+			}
+		});
+
+		clear();
+
+	</script>
+
+</div>
+</body>
+</html>
