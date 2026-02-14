@@ -53,7 +53,6 @@ const myTexImages = {};
 initTexImages();
 
 // DataURL から Image を作り、myTexImages[] に登録する
-// dataUrls[] に登録してあるキーは、現在のところ "1px", "tex/daisy.webp" の2つのみ
 async function initTexImages() {
 	for (const key in dataUrls) {
 		try {

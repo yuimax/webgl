@@ -56,7 +56,7 @@ function s05_drawTexture(backColor) {
 	mat4.translate(
 		modelview_matrix,
 		modelview_matrix,
-		[0.0, 0.0, -2.5]	// 計算では [0, 0, -2.414] で、半径1の円がキャンバスに内接する
+		[0.0, 0.0, -1.6]	// 計算では [0, 0, -2.414] で、半径1の円がキャンバスに内接する
 	);
 	setUniformMat4('uModelViewMatrix', modelview_matrix);
 
@@ -104,7 +104,7 @@ function s05_drawTexture(backColor) {
 	gl.enableVertexAttribArray(tex_loc);
 
 	// テクスチャ画像の取得
-	const texImage = myTexImages['tex/daisy.webp'];
+	const texImage = myTexImages['tex/cathy3.webp'];
 
 	// テクスチャの作成
 	const texture = gl.createTexture();

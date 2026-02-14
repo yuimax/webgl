@@ -41,6 +41,11 @@ def make_data_urls(file_paths, output_path):
 
 if __name__ == "__main__":
     image_files = [
-        "tex/daisy.webp",
+#        "tex/daisy.webp",
+#        "tex/daisy2.webp",
+#        "tex/daisy3.webp",
+#        "tex/cathy.webp",
+#        "tex/cathy2.webp",
+        "tex/cathy3.webp",
     ]
     make_data_urls(image_files, "data-urls.js")
